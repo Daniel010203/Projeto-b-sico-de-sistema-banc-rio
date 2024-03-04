@@ -4,17 +4,140 @@ Este projeto é um sistema bancário simples desenvolvido em Python, voltado par
 
 ## Funcionalidades
 
-O sistema possui as seguintes funcionalidades:
+Vou explicar cada parte do código:
 
-1. **Cadastro de Clientes**: Permite o cadastro de novos clientes, incluindo informações básicas como nome, CPF, endereço, entre outros.
+1. **Importação do Módulo `textwrap`**:
+   ```python
+   import textwrap
+   ```
+   Este trecho importa o módulo `textwrap`, que fornece algumas funções para lidar com formatação e quebra de texto.
 
-2. **Contas Bancárias**: Criação e gerenciamento de contas bancárias para os clientes cadastrados, com suporte para diferentes tipos de conta, como conta corrente e conta poupança.
+2. **Função `menu()`**:
+   ```python
+   def menu():
+       menu_text = """\n
+       ================ MENU ================
+       [d]\tDepositar em conta
+       [s]\tSacar de conta
+       [e]\tExtrato bancário
+       [nc]\tNova conta
+       [lc]\tListar contas
+       [nu]\tNovo cliente do banco
+       [q]\tSair
+       => """
+       return input(textwrap.dedent(menu_text))
+   ```
+   Esta função exibe um menu de operações bancárias e solicita ao usuário que insira sua escolha. `textwrap.dedent()` é usado para remover a indentação do texto do menu.
 
-3. **Transações Financeiras**: Realização de diversas transações financeiras, incluindo transferências entre contas, depósitos e saques.
+3. **Função `depositar(saldo, valor, extrato)`**:
+   ```python
+   def depositar(saldo, valor, extrato):
+       if valor > 0:
+           saldo += valor
+           extrato += f"Depósito em conta:\tR$ {valor:.2f}\n"
+           print("\n=== Tudo certo, seu depósito foi realizado com sucesso! ===")
+       else:
+           print("\n@@@ Operação falhou! O valor informado é inválido, tente novamente. @@@")
 
-4. **Consulta de Saldo**: Os clientes podem verificar o saldo de suas contas a qualquer momento, garantindo transparência e controle sobre suas finanças.
+       return saldo, extrato
+   ```
+   Esta função realiza a operação de depósito em conta. Ela recebe o saldo atual, o valor a ser depositado e o extrato atual como argumentos, e retorna o saldo atualizado e o extrato atualizado. Se o valor do depósito for maior que zero, o saldo é aumentado e o registro do depósito é adicionado ao extrato. Caso contrário, uma mensagem de erro é exibida.
 
-5. **Segurança**: Implementação de medidas de segurança, como autenticação de usuários e validação de transações, visando proteger as informações e os recursos financeiros dos clientes.
+4. **Função `sacar(saldo, valor, extrato, limite, numero_saques, limite_saques)`**:
+   ```python
+   def sacar(saldo, valor, extrato, limite, numero_saques, limite_saques):
+       excedeu_saldo = valor > saldo
+       excedeu_limite = valor > limite
+       excedeu_saques = numero_saques >= limite_saques
+
+       if excedeu_saldo:
+           print("\n@@@ Operação falhou! Você não tem saldo suficiente. @@@")
+
+       elif excedeu_limite:
+           print("\n@@@ Operação falhou! O valor do saque excede o limite. @@@")
+
+       elif excedeu_saques:
+           print("\n@@@ Operação falhou! Número máximo de saques excedido. @@@")
+
+       elif valor > 0:
+           saldo -= valor
+           extrato += f"Saque:\t\tR$ {valor:.2f}\n"
+           numero_saques += 1
+           print("\n=== Saque realizado com sucesso! ===")
+
+       else:
+           print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
+
+       return saldo, extrato
+   ```
+   Esta função realiza a operação de saque em conta. Ela recebe o saldo atual, o valor a ser sacado, o extrato atual, o limite de saque, o número de saques realizados e o limite de saques como argumentos, e retorna o saldo atualizado e o extrato atualizado. Verifica se o saque excede o saldo, o limite de saque ou o número máximo de saques permitidos. Se não houver nenhum problema, o saque é realizado e registrado no extrato.
+
+5. **Função `exibir_extrato(saldo, extrato)`**:
+   ```python
+   def exibir_extrato(saldo, extrato):
+       print("\n================ EXTRATO ================")
+       print("Não foram realizadas movimentações." if not extrato else extrato)
+       print(f"\nSaldo:\t\tR$ {saldo:.2f}")
+       print("==========================================")
+
+
+   ```
+   Esta função exibe o extrato bancário, incluindo as movimentações (depósitos e saques) e o saldo atual.
+
+6. **Função `criar_usuario(usuarios)`**:
+   ```python
+   def criar_usuario(usuarios):
+       cpf = input("Informe o CPF (somente número): ")
+       usuario = filtrar_usuario(cpf, usuarios)
+
+       if usuario:
+           print("\n@@@ Já existe usuário com esse CPF! @@@")
+           return
+
+       nome = input("Informe o nome completo: ")
+       data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
+       endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
+
+       usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
+
+       print("=== Usuário criado com sucesso! ===")
+   ```
+   Esta função permite a criação de um novo usuário no sistema bancário. Ela solicita informações como CPF, nome, data de nascimento e endereço, e adiciona essas informações à lista de usuários.
+
+7. **Função `filtrar_usuario(cpf, usuarios)`**:
+   ```python
+   def filtrar_usuario(cpf, usuarios):
+       usuarios_filtrados = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+       return usuarios_filtrados[0] if usuarios_filtrados else None
+   ```
+   Esta função filtra os usuários com base no CPF fornecido.
+
+8. **Função `criar_conta(agencia, numero_conta, usuarios)`**:
+   ```python
+   def criar_conta(agencia, numero_conta, usuarios):
+       cpf = input("Informe o CPF do usuário: ")
+       usuario = filtrar_usuario(cpf, usuarios)
+
+       if usuario:
+           print("\n=== Conta criada com sucesso! ===")
+           return {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
+
+       print("\n@@@ Usuário não encontrado, fluxo de criação de conta encerrado! @@@")
+
+   ```
+   Esta função permite a criação de uma nova conta bancária associada a um usuário existente. Ela solicita o CPF do usuário e, se o usuário existir, cria a conta e a associa ao usuário.
+
+9. **Função `listar_contas(contas)`**:
+   ```python
+   def listar_contas(contas):
+       for conta in contas:
+           linha = f"""\
+               Agência:\t{conta['agencia']}
+               C/C:\t\t{conta['numero_conta']}
+               Titular:\t{conta['usuario']['nome']}
+           """
+           print("=" * 100)
+           print(textwrap.dedent(linha
 
 ## Importância de um Sistema Bancário com Funcionalidades Práticas e Seguras
 
